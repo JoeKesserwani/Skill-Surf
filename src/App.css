@@ -4,13 +4,11 @@
   width: 101%;
 }
 
-#name{
+#name {
   color: red;
   text-align: left;
-
-  
 }
-.googlebtn{
+.googlebtn {
   background-color: white;
   color: black;
   border-radius: 10px;
@@ -20,7 +18,7 @@
   margin-top: 20px;
   font-size: large;
 }
-#logout-button{
+#logout-button {
   color: black;
   position: absolute;
   background-color: white;
@@ -29,10 +27,9 @@
   margin-left: 89%;
   font-size: 30px;
   border-style: none;
-  font-style:initial;
-
+  font-style: initial;
 }
-.profile-image{
+.profile-image {
   position: absolute;
   width: 50px;
   height: 50px;
@@ -43,74 +40,69 @@
   border-radius: 10px;
   margin-top: 7px;
 }
-.pfp{
+.pfp {
   width: 150px;
   height: 150px;
   margin-left: 10px;
 }
 
-.header{
+.header {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
   width: 100%;
   background-color: aqua;
   font-size: large;
-
 }
-.list{
-  
+.list {
   align-items: end;
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
-.tasks{
+.tasks {
   display: flex;
   flex-direction: column;
 }
-.list button{
-  
+.list button {
   margin-left: 20px;
   text-align: center;
-
-
 }
-.age{
+.age {
   font-size: 42px;
 }
-.nav{
+.nav {
   display: flex;
   justify-content: space-evenly;
   background-color: red;
   width: 100%;
 }
-#profile,#back,#home,#skillsurf{
+#profile,
+#back,
+#home,
+#skillsurf {
   background-color: rgba(0, 0, 0, 0.418);
   color: white;
   padding: 14px 25px;
   text-decoration: none;
   display: inline-block;
 }
-.navbar{
+.navbar {
   background-color: white;
   width: 100%;
   height: 70px;
   border-style: groove;
   border-radius: 10px;
   display: flex;
-  border-color: limegreen
-  
-  
+  border-color: limegreen;
 }
-#logo{
+#logo {
   position: absolute;
-  font-family:Verdana, Geneva, Tahoma, sans-serif;
-  margin-left:4% ;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  margin-left: 4%;
   color: black;
 }
-#signup{
+#signup {
   color: seagreen;
   border-color: seagreen;
   position: absolute;
@@ -122,7 +114,7 @@
   margin-left: 89%;
   border-radius: 10px;
 }
-#signin{
+#signin {
   color: black;
   position: absolute;
   text-decoration: none;
@@ -130,73 +122,70 @@
   margin: 17px;
   margin-left: 83%;
   font-size: 30px;
-
 }
 
-.signupbox{
+.signupbox {
   width: 100%;
   max-width: 900px;
   background-color: white;
   border-radius: 8px;
   box-shadow: box-shadow;
-  border-style:ridge;
+  border-style: ridge;
   overflow: hidden;
   padding: 30px;
 }
 
-.container{
+.container {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 0;
 }
-.mainsignup{
+.mainsignup {
   background-color: lightgray;
   width: 100%;
   height: 100%;
 }
-.header1{
+.header1 {
   background-color: lightgray;
   display: flex;
   justify-content: space-between;
-  align-items:normal;
+  align-items: normal;
   width: 100%;
   height: 20px;
 }
-#signin2{
+#signin2 {
   color: black;
   position: absolute;
   text-decoration: none;
   margin-left: 91%;
-  margin-top:  -6px; ;
+  margin-top: -6px;
   border-style: solid;
   color: seagreen;
   border-color: seagreen;
   border-radius: 10px;
-
 }
-.signin{
+.signin {
   background-color: lightgray;
   width: 100%;
   height: 100%;
 }
-.signinbox{
+.signinbox {
   width: 100%;
   padding: 30px;
   max-width: 900px;
   background-color: white;
   border-radius: 8px;
   box-shadow: box-shadow;
-  border-style:ridge;
-  overflow: hidden;}
-
+  border-style: ridge;
+  overflow: hidden;
+}
 
 .hamburger-container {
   position: relative;
   z-index: 1001;
 }
-
 
 .hamburger {
   width: 30px;
@@ -206,7 +195,6 @@
   position: relative;
   margin-left: -5%;
   margin-top: 5%;
-
 }
 
 .bar {
@@ -216,7 +204,6 @@
   margin: 5px 0;
   transition: 0.3s ease;
 }
-
 
 .sidebar {
   position: fixed;
@@ -238,18 +225,15 @@
 }
 
 .sidebar a {
-  
   padding: 16px;
   text-decoration: none;
   color: #333;
   border: 1px solid seagreen;
-  
 }
 
 .sidebar a:hover {
   background-color: #888686;
 }
-
 
 .overlay {
   position: fixed;
@@ -257,10 +241,10 @@
   left: 0;
   height: 100vh;
   width: 100vw;
-  background-color: rgba(211, 211, 211, 0.7); 
+  background-color: rgba(211, 211, 211, 0.7);
   z-index: 1000;
 }
-.profilebox{
+.profilebox {
   width: 500px;
   height: 300px;
   padding: 30px;
@@ -268,7 +252,7 @@
   background-color: white;
   border-radius: 30px;
   box-shadow: box-shadow;
-  border-style:ridge;
+  border-style: ridge;
   overflow: hidden;
   margin-left: 100px;
   border-color: seagreen;
@@ -302,12 +286,12 @@
   border-radius: 5px;
   cursor: pointer;
 }
-.description{
+.description {
   font-size: 20px;
   margin-top: 10px;
   margin-left: 10px;
 }
-.description-input{
+.description-input {
   width: 100%;
   height: 50px;
   border-radius: 10px;
@@ -315,27 +299,23 @@
   border-color: seagreen;
   margin-top: 10px;
 }
-.services{
+.services {
   display: flex;
   flex-direction: row;
   width: 100%;
   margin-top: 3px;
-  border-style:groove;
+  border-style: groove;
   border-radius: 10px;
-  flex-wrap:wrap;
+  flex-wrap: wrap;
   border-bottom: transparent;
-  gap:55px;
-  background-color:white;
+  gap: 55px;
+  background-color: white;
   border-color: seagreen;
-  
 }
-.addservice{
+.addservice {
   margin-left: 50%;
   position: absolute;
   margin-top: 20px;
-  
-  
-  
 }
 .modal-backdrop {
   position: fixed;
@@ -357,23 +337,21 @@
   width: 400px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
-.webservices{
+.webservices {
   display: flex;
-  flex-wrap:wrap;
+  flex-wrap: wrap;
   flex-direction: row;
   width: 100%;
   border-color: seagreen;
   border-bottom: transparent;
-  border-style:groove;
+  border-style: groove;
   border-radius: 10px;
-  gap:55px;
+  gap: 55px;
   background-color: white;
-  
-  
 }
-.service-card{
-  width: calc(20% );
-  height: 300px;
+.service-card {
+  width: calc(20%);
+  height: 350px;
   border-radius: 10px;
   border-style: solid;
   border-color: seagreen;
@@ -384,16 +362,16 @@
   justify-content: center;
   align-items: center;
 }
-.search{
-  background-image: url('https://img.freepik.com/free-photo/top-view-ring-binder_23-2149569004.jpg?t=st=1746737132~exp=1746740732~hmac=6e5c5923763b2c7ad81874686d91387d51e07db543bb6798b79a027ea6348c82&w=996');
+.search {
+  background-image: url("https://img.freepik.com/free-photo/top-view-ring-binder_23-2149569004.jpg?t=st=1746737132~exp=1746740732~hmac=6e5c5923763b2c7ad81874686d91387d51e07db543bb6798b79a027ea6348c82&w=996");
   width: 50%;
-  height:400px;
+  height: 400px;
   margin-left: 25%;
   border-radius: 10px;
   align-items: center;
   align-content: center;
 }
-.profile-extras{
+.profile-extras {
   width: 500px;
   height: 300px;
   padding: 30px;
@@ -401,12 +379,27 @@
   background-color: white;
   border-radius: 30px;
   box-shadow: box-shadow;
-  border-style:ridge;
+  border-style: ridge;
   overflow: hidden;
   margin-left: 800px;
   margin-top: -365px;
   margin-bottom: 20px;
   border-color: seagreen;
-
+}
+.media-preview {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
+.media-grid {
+  display: flex;
+  gap: 10px;
+}
+.media-item {
+  flex: 0 0 auto;
+}
+.simage{
+  height: 200px;
+  width: 100%;
+}

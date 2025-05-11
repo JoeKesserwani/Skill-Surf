@@ -13,7 +13,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { signOut } from "firebase/auth";
 import { db } from "./config/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 import { navigate } from "react-router-dom";
 import { SearchResults } from "./skill surf/search";
 
@@ -74,6 +74,30 @@ export const SkillSurf = () => {
     return () => unsubscribe();
   }, []);
   if (loading) return <p>Loading user info...</p>;
+
+  const handleBuy = async (service) => {
+    if (!user) {
+      alert("You must be signed in to purchase a service.");
+      return;
+    }
+
+    try {
+      const purchasesRef = collection(db, "purchases");
+      await addDoc(purchasesRef, {
+        buyerId: user.uid,
+        serviceId: service.id,
+        title: service.title,
+        sellerId: service.ownerId,
+        price: service.price,
+        timestamp: new Date(),
+      });
+
+      alert(`You have purchased: ${service.title}`);
+    } catch (error) {
+      console.error("Purchase failed:", error);
+      alert("Error purchasing service. Please try again.");
+    }
+  };
 
   return (
     <div className="skillsurf">
@@ -140,8 +164,24 @@ export const SkillSurf = () => {
       <div className="webservices">
         {services.map((service) => (
           <div key={service.id} className="service-card">
-            <strong>{service.title}</strong> <p>{service.Sdescription}</p> ($
-            {service.price})
+            <img
+              src={service.imageURL}
+              alt={service.title}
+              className="simage"
+            />
+            <strong>{service.title}</strong>
+            <p>{service.Sdescription}</p>
+            <p>${service.price}</p>
+
+            {user && user.uid !== service.ownerId ? (
+              <button onClick={() => handleBuy(service)}>Buy</button>
+            ) : (
+              <p style={{ fontStyle: "italic", color: "gray" }}>
+                {user?.uid === service.ownerId
+                  ? "This is your service"
+                  : "Sign in to buy"}
+              </p>
+            )}
           </div>
         ))}
       </div>

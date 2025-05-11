@@ -12,7 +12,11 @@ import {
   addDoc,
   serverTimestamp,
   getDocs,
+  deleteDoc,
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../config/firebase";
+import { deleteObject } from "firebase/storage";
 
 export const Profile = (props) => {
   const [photoURL, setPhotoURL] = useState(null);
@@ -25,90 +29,178 @@ export const Profile = (props) => {
   const [Sdescription, setSDescription] = useState("");
   const [price, setPrice] = useState("");
   const [linkedIn, setLinkedIn] = useState("");
-  const [resumeURL, setResume] = useState("");
-  const [mediaURLs, setMedia] = useState([]);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [mediaFiles, setMediaFiles] = useState([]);
   const [services, setServices] = useState([]);
   const [userServices, setUserServices] = useState([]);
+  const [resumeURL, setResume] = useState("");
+  const [mediaURLs, setMedia] = useState([]);
+  const [mediaPreviewURLs, setMediaPreviewURLs] = useState([]);
+  const [serviceImageFile, setServiceImageFile] = useState(null);
+
   const navigate = useNavigate();
+  const handleDeleteService = async (service) => {
+    if (!window.confirm("Are you sure you want to delete this service?"))
+      return;
+
+    try {
+      if (service.imageURL) {
+        const path = `serviceImages/${auth.currentUser.uid}_${
+          service.imageURL.split("%2F")[1].split("?")[0]
+        }`;
+        const imageRef = ref(storage, path);
+        await deleteObject(imageRef);
+      }
+
+      await deleteDoc(doc(db, "services", service.id));
+      setUserServices((prev) => prev.filter((s) => s.id !== service.id));
+      alert("Service deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      alert("Failed to delete service.");
+    }
+  };
+
+  const handleDeleteMedia = async (mediaObj) => {
+    if (!window.confirm("Are you sure you want to delete this media file?"))
+      return;
+
+    try {
+      const fileRef = ref(storage, mediaObj.path);
+      await deleteObject(fileRef);
+
+      const updatedMedia = mediaURLs.filter((m) => m.url !== mediaObj.url);
+      await setDoc(
+        doc(db, "users", auth.currentUser.uid),
+        { mediaURLs: updatedMedia },
+        { merge: true }
+      );
+
+      setMedia(updatedMedia);
+      alert("Media deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting media:", error);
+      alert("Failed to delete media.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      let imageURL = "";
+
+      if (serviceImageFile) {
+        const imageRef = ref(
+          storage,
+          `serviceImages/${auth.currentUser.uid}_${serviceImageFile.name}`
+        );
+        const snapshot = await uploadBytes(imageRef, serviceImageFile);
+        imageURL = await getDownloadURL(snapshot.ref);
+      }
+
       await addDoc(collection(db, "services"), {
         title,
         Sdescription,
         price,
+        imageURL,
         createdAt: serverTimestamp(),
-        userId: auth.currentUser?.uid,
+        userId: user.uid,
       });
+
       alert("Service added!");
       setShowModal(false);
       setTitle("");
       setSDescription("");
       setPrice("");
+      setServiceImageFile(null);
     } catch (error) {
       console.error("Error adding service:", error);
     }
   };
+
   const handleDescriptionChange = (e) => setDescription(e.target.value);
   const handleLinkedInChange = (e) => setLinkedIn(e.target.value);
-  const handleResumeChange = (e) => setResume(e.target.value);
-  const handleMediaChange = (index, value) => {
-    const newMedia = [...mediaURLs];
-    newMedia[index] = value;
-    setMedia(newMedia);
-  };
 
-  const addMediaField = () => setMedia([...mediaURLs, ""]);
-  const removeMediaField = (index) => {
-    const newMedia = [...mediaURLs];
-    newMedia.splice(index, 1);
-    setMedia(newMedia);
+  const handleMediaChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    setMediaFiles((prev) => [...prev, ...files]);
+
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setMediaPreviewURLs((prev) => [...prev, ...previews]);
   };
 
   const saveProfileExtras = async () => {
-    if (!linkedIn && !resumeURL && mediaURLs.every((url) => !url)) {
-      alert("Please fill in at least one field.");
+    if (!linkedIn && !resumeFile && mediaFiles.length === 0) {
+      alert("Please upload a file or add a LinkedIn link.");
       return;
     }
 
-    if (auth.currentUser) {
-      try {
-        await setDoc(
-          doc(db, "users", auth.currentUser.uid),
-          {
-            linkedIn,
-            resumeURL,
-            mediaURLs: mediaURLs.filter((url) => url !== ""),
-          },
-          { merge: true }
+    let resumeDownloadURL = resumeURL;
+    let uploadedMediaURLs = [];
+
+    try {
+      if (resumeFile) {
+        const resumeRef = ref(
+          storage,
+          `resumes/${auth.currentUser.uid}_${resumeFile.name}`
         );
-        alert("Profile extras saved!");
-      } catch (error) {
-        console.error("Error saving profile extras:", error);
-        alert("Failed to save profile extras.");
+        const snapshot = await uploadBytes(resumeRef, resumeFile);
+        resumeDownloadURL = await getDownloadURL(snapshot.ref);
       }
+
+      for (const file of mediaFiles) {
+        const filePath = `media/${auth.currentUser.uid}_${file.name}`;
+        const mediaRef = ref(storage, filePath);
+        const snapshot = await uploadBytes(mediaRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        uploadedMediaURLs.push({ url, path: filePath });
+      }
+
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      const oldMedia = userDoc.exists() ? userDoc.data().mediaURLs || [] : [];
+
+      const combinedMedia = [...oldMedia, ...uploadedMediaURLs];
+
+      await setDoc(
+        doc(db, "users", auth.currentUser.uid),
+        {
+          linkedIn,
+          resumeURL: resumeDownloadURL,
+          mediaURLs: [...oldMedia, ...uploadedMediaURLs],
+        },
+        { merge: true }
+      );
+
+      setResume(resumeDownloadURL);
+      setMedia(combinedMedia);
+      alert("Profile extras saved!");
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      alert("Failed to save profile extras.");
     }
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
         const docRef = doc(db, "users", user.uid);
-        getDoc(docRef)
-          .then((docSnap) => {
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              setDescription(data.description || "");
-              setLinkedIn(data.linkedIn || "");
-              setResume(data.resumeURL || "");
-              setMedia(data.mediaURLs || [""]);
-            }
-          })
-          .catch((error) => console.error("Error fetching profile:", error));
+        try {
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setDescription(data.description || "");
+            setLinkedIn(data.linkedIn || "");
+            setResume(data.resumeURL || "");
+            setMedia(data.mediaURLs || []);
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -150,9 +242,9 @@ export const Profile = (props) => {
 
   useEffect(() => {
     const fetchServices = async () => {
+      if (!user) return;
       try {
-        const servicesCollection = collection(db, "services");
-        const servicesSnapshot = await getDocs(servicesCollection);
+        const servicesSnapshot = await getDocs(collection(db, "services"));
         const servicesList = servicesSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -160,13 +252,10 @@ export const Profile = (props) => {
 
         setServices(servicesList);
 
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-          const ownedServices = servicesList.filter(
-            (service) => service.userId === currentUser.uid
-          );
-          setUserServices(ownedServices);
-        }
+        const ownedServices = servicesList.filter(
+          (service) => service.userId === user.uid
+        );
+        setUserServices(ownedServices);
       } catch (error) {
         console.error("Error fetching services:", error);
       }
@@ -261,53 +350,74 @@ export const Profile = (props) => {
               value={linkedIn}
               onChange={handleLinkedInChange}
             />
-            <input
-              type="text"
-              placeholder="Resume URL"
-              value={resumeURL}
-              onChange={handleResumeChange}
-            />
-            {mediaURLs.map((url, i) => (
-              <div key={i} className="media-url-input">
-                <input
-                  type="text"
-                  placeholder={`Media URL ${i + 1}`}
-                  value={url}
-                  onChange={(e) => handleMediaChange(i, e.target.value)}
-                />
-                {mediaURLs.length > 1 && (
-                  <button type="button" onClick={() => removeMediaField(i)}>
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-            <button type="button" onClick={addMediaField}>
-              + Add Media URL
-            </button>
+
+            <div>
+              <label>Upload Resume (PDF):</label>
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setResumeFile(e.target.files[0])}
+              />
+            </div>
+
+            <div>
+              <label>Upload Media (Images/Videos):</label>
+              <input type="file" multiple onChange={handleMediaChange} />
+            </div>
+
             <button onClick={saveProfileExtras} className="save-button">
               Save
             </button>
-            {mediaURLs.filter((url) => url).length > 0 && (
+
+            {mediaURLs.length > 0 && (
               <div className="media-preview">
                 <h3>Media Preview</h3>
                 <div className="media-grid">
-                  {mediaURLs.map((url, i) => (
-                    <div key={i} className="media-item">
-                      <img
-                        src={url}
-                        alt={`Media ${i + 1}`}
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.textContent = url;
-                          link.target = "_blank";
-                          e.target.parentNode.appendChild(link);
-                        }}
-                      />
-                    </div>
-                  ))}
+                  {mediaURLs.map((media, i) => {
+                    const mediaUrl =
+                      typeof media === "string" ? media : media?.url;
+
+                    return (
+                      <div
+                        key={i}
+                        className="media-item"
+                        style={{ position: "relative" }}
+                      >
+                        <button
+                          onClick={() => handleDeleteMedia(media)}
+                          style={{
+                            position: "absolute",
+                            top: "5px",
+                            right: "5px",
+                            backgroundColor: "red",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "50%",
+                            width: "20px",
+                            height: "20px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            lineHeight: "20px",
+                            textAlign: "center",
+                            padding: 0,
+                          }}
+                        >
+                          ×
+                        </button>
+
+                        {mediaUrl?.includes(".mp4") ||
+                        mediaUrl?.includes("video") ? (
+                          <video src={mediaUrl} controls width="200" />
+                        ) : (
+                          <img
+                            src={mediaUrl}
+                            alt={`Media ${i + 1}`}
+                            width="200"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -341,8 +451,18 @@ export const Profile = (props) => {
                 </div>
                 {userServices.map((service) => (
                   <div className="service-card" key={service.id}>
+                    {service.imageURL && (
+                      <img
+                        src={service.imageURL}
+                        alt={service.title}
+                        width="200"
+                      />
+                    )}
                     <strong>{service.title}</strong> {service.Sdescription} ($
                     {service.price})
+                    <button onClick={() => handleDeleteService(service)}>
+                      Delete
+                    </button>
                   </div>
                 ))}
               </>
@@ -354,6 +474,11 @@ export const Profile = (props) => {
               <div className="modal">
                 <h2>Add a New Service</h2>
                 <form onSubmit={handleSubmit}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setServiceImageFile(e.target.files[0])}
+                  />
                   <input
                     type="text"
                     placeholder="Service Title"
