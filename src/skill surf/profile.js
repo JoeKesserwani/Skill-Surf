@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../config/firebase";
-import { deleteObject } from "firebase/storage";
+import { deleteObject, getStorage } from "firebase/storage";
 
 export const Profile = (props) => {
   const [photoURL, setPhotoURL] = useState(null);
@@ -37,6 +37,8 @@ export const Profile = (props) => {
   const [mediaURLs, setMedia] = useState([]);
   const [mediaPreviewURLs, setMediaPreviewURLs] = useState([]);
   const [serviceImageFile, setServiceImageFile] = useState(null);
+  const [userPhotoURL, setUserPhotoURL] = useState(null);
+  const [userName, setUserName] = useState("");
 
   const navigate = useNavigate();
   const handleDeleteService = async (service) => {
@@ -45,11 +47,15 @@ export const Profile = (props) => {
 
     try {
       if (service.imageURL) {
-        const path = `serviceImages/${auth.currentUser.uid}_${
-          service.imageURL.split("%2F")[1].split("?")[0]
-        }`;
-        const imageRef = ref(storage, path);
-        await deleteObject(imageRef);
+        try {
+          const imageRef = ref(storage, service.imageURL);
+          await deleteObject(imageRef);
+        } catch (err) {
+          console.warn(
+            "Failed to delete image from storage. It may not exist.",
+            err
+          );
+        }
       }
 
       await deleteDoc(doc(db, "services", service.id));
@@ -105,6 +111,8 @@ export const Profile = (props) => {
         imageURL,
         createdAt: serverTimestamp(),
         userId: user.uid,
+        userPhotoURL: user.photoURL,
+        userName: user.displayName,
       });
 
       alert("Service added!");
@@ -113,6 +121,8 @@ export const Profile = (props) => {
       setSDescription("");
       setPrice("");
       setServiceImageFile(null);
+      setUserPhotoURL(null);
+      setUserName("");
     } catch (error) {
       console.error("Error adding service:", error);
     }
@@ -194,6 +204,8 @@ export const Profile = (props) => {
             setLinkedIn(data.linkedIn || "");
             setResume(data.resumeURL || "");
             setMedia(data.mediaURLs || []);
+            setUserPhotoURL(data.userPhotoURL);
+            setUserName(data.userName);
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
@@ -299,6 +311,9 @@ export const Profile = (props) => {
 
   return (
     <div className="profile">
+      <head>
+        <title>SkillSurf</title>
+      </head>
       <div className="navbar">
         <div className="ham">
           <HamburgerMenu />
@@ -312,7 +327,7 @@ export const Profile = (props) => {
       </div>
       {showPopup ? (
         <div className="popup-overlay">
-          <div className="popup-conten">
+          <div className="popup-content">
             <h2>Please log in to access this page.</h2>
             <button onClick={handleClosePopup}>OK</button>
           </div>
@@ -385,22 +400,8 @@ export const Profile = (props) => {
                       >
                         <button
                           onClick={() => handleDeleteMedia(media)}
-                          style={{
-                            position: "absolute",
-                            top: "5px",
-                            right: "5px",
-                            backgroundColor: "red",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "50%",
-                            width: "20px",
-                            height: "20px",
-                            cursor: "pointer",
-                            fontSize: "14px",
-                            lineHeight: "20px",
-                            textAlign: "center",
-                            padding: 0,
-                          }}
+                          style={{}}
+                          className="delete-button"
                         >
                           ×
                         </button>
@@ -450,18 +451,23 @@ export const Profile = (props) => {
                   </div>
                 </div>
                 {userServices.map((service) => (
-                  <div className="service-card" key={service.id}>
+                  <div className="service-cards" key={service.id}>
                     {service.imageURL && (
                       <img
                         src={service.imageURL}
                         alt={service.title}
                         width="200"
+                        className="simage"
                       />
                     )}
-                    <strong>{service.title}</strong> {service.Sdescription} ($
-                    {service.price})
+                    <strong>{service.title}</strong> {service.Sdescription}
+                    <p>
+                      {" "}
+                      ($
+                      {service.price})
+                    </p>
                     <button onClick={() => handleDeleteService(service)}>
-                      Delete
+                      remove service
                     </button>
                   </div>
                 ))}
@@ -470,8 +476,8 @@ export const Profile = (props) => {
           </div>
 
           {showModal && (
-            <div className="modal-backdrop">
-              <div className="modal">
+            <div className="smodal-backdrop">
+              <div className="smodal">
                 <h2>Add a New Service</h2>
                 <form onSubmit={handleSubmit}>
                   <input

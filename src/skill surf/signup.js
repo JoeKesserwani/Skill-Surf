@@ -7,111 +7,166 @@ import PropTypes from "prop-types";
 import { auth, provider } from "../config/firebase";
 import { signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { db } from "../config/firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../config/firebase";
 
 export const Signup = () => {
   const navigate = useNavigate();
-  const onGoogleSignIn = async () => {
-    const result = await signInWithPopup(auth, provider);
-    console.log(result);
-    navigate("/");
-  };
-
-  const onSubmit = () => {
-    console.log("Form submitted");
-  };
   const schema = yup.object().shape({
-    username: yup.string().required("Username is required"),
-    email: yup.string().email("invalid email").required("Email is required"),
-    password: yup.string().min(5).max(10).required("password is required"),
-    confirmpassword: yup
+    name: yup.string().required("Name is required"),
+    email: yup.string().email("Invalid email").required("Email is required"),
+    password: yup
       .string()
-      .oneOf([yup.ref("password"), null], "passwords must match")
-      .required("confirm password is required"),
+      .min(6, "Minimum 6 characters")
+      .required("Password is required"),
+    image: yup
+      .mixed()
+      .test(
+        "required",
+        "Profile image is required",
+        (value) => value && value.length > 0
+      ),
   });
+
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm({ resolver: yupResolver(schema) });
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
+
+  const onEmailSignup = async (data) => {
+    try {
+      const { name, email, password, image } = data;
+
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      const imageFile = image[0];
+      const imageRef = ref(
+        storage,
+        `profileImages/${user.uid}/${imageFile.name}`
+      );
+      await uploadBytes(imageRef, imageFile);
+      const photoURL = await getDownloadURL(imageRef);
+
+      await updateProfile(user, {
+        displayName: name,
+        photoURL,
+      });
+
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        email,
+        photoURL,
+        description: "Hello! I'm new to SkillSurf.",
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error("Signup error:", error.message);
+      alert(error.message);
+    }
+  };
+
+  const onGoogleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        await setDoc(userDocRef, {
+          name: user.userName,
+          email: user.email,
+          photoURL: user.photoURL,
+          description: "Hello! I'm new to SkillSurf.",
+        });
+      }
+
+      navigate("/");
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="mainsignup">
-        <div className="signup">
-          <div className="header1">
-            <Link to="/" id="logo">
-              <h1 id="logo">
-                Skill<span style={{ color: "seagreen" }}>Surf</span>
-              </h1>
-            </Link>
-            <h1>
-              <Link to="/signin" id="signin2">
-                Log In
-              </Link>
+    <div className="mainsignup">
+      <head>
+        <title>SkillSurf</title>
+      </head>
+      <div className="signup">
+        <div className="header1">
+          <Link to="/" id="logo">
+            <h1 id="logo">
+              Skill<span style={{ color: "seagreen" }}>Surf</span>
             </h1>
-          </div>
+          </Link>
+          <h1>
+            <Link to="/signin" id="signin2">
+              Log In
+            </Link>
+          </h1>
         </div>
+      </div>
 
-        <div className="container">
-          <div className="signupbox">
-            <h1>create your account</h1>
-            <p>
-              Already have an account?<Link to="/signin">LogIn</Link>
-            </p>
-            <div className="signupform">
-              <b>username: </b>
-              <input
-                type="text"
-                placeholder="username"
-                {...register("username", { required: true })}
+      <div className="container">
+        <div className="signupbox">
+          <h1>LogIn</h1>
+          <form
+            onSubmit={handleSubmit(onEmailSignup)}
+            className="email-signup-form"
+          >
+            <input type="text" placeholder="Name" {...register("name")} />
+            {errors.name && <p className="error">{errors.name.message}</p>}
+
+            <input type="email" placeholder="Email" {...register("email")} />
+            {errors.email && <p className="error">{errors.email.message}</p>}
+
+            <input
+              type="password"
+              placeholder="Password"
+              {...register("password")}
+            />
+            {errors.password && (
+              <p className="error">{errors.password.message}</p>
+            )}
+
+            <label>Choose a profile picture:</label>
+            <input type="file" accept="image/*" {...register("image")} />
+            {errors.image && <p className="error">{errors.image.message}</p>}
+
+            <button type="submit" className="email-signup-btn">
+              Sign Up
+            </button>
+          </form>
+          <p>
+            Already have an account? <Link to="/signin">Log In</Link>
+          </p>
+          <p>or</p>
+
+          <br />
+          <div className="googlesignup">
+            <button className="googlebtn" onClick={onGoogleSignIn}>
+              <img
+                src="https://img.icons8.com/color/48/000000/google-logo.png"
+                alt="google logo"
               />
-              {errors.username && <p>{errors.username.message}</p>}
-
-              <br />
-              <b>email: </b>
-              <input
-                type="email"
-                placeholder="email"
-                {...register("email", { required: true })}
-              />
-              {errors.email && <p>{errors.email.message}</p>}
-
-              <br />
-              <b>password: </b>
-              <input
-                type="password"
-                placeholder="password"
-                {...register("password", { required: true })}
-              />
-              {errors.password && <p>{errors.password?.message}</p>}
-
-              <br />
-              <b>confirm password: </b>
-              <input
-                type="password"
-                placeholder="confirm password"
-                {...register("confirmpassword", { required: true })}
-              />
-              {errors.confirmpassword && (
-                <p>{errors.confirmpassword.message}</p>
-              )}
-
-              <br />
-              <input type="submit" value="create account" />
-            </div>
-            <br />
-            <div className="googlesignup">
-              <h3>or</h3>
-              <button className="googlebtn" onClick={onGoogleSignIn}>
-                <img
-                  src="https://img.icons8.com/color/48/000000/google-logo.png"
-                  alt="google logo"
-                />
-              </button>
-            </div>
+            </button>
           </div>
         </div>
       </div>
-    </form>
+    </div>
   );
 };

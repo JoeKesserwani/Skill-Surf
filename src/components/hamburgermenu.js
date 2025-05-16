@@ -19,7 +19,9 @@ const HamburgerMenu = () => {
         </div>
 
         <div className={`sidebar ${isOpen ? "open" : ""}`}>
+          <Link to="/">Home</Link>
           <Link to="/profile">Profile</Link>
+          <Link to="/orders">Notifications</Link>
         </div>
       </div>
     </>

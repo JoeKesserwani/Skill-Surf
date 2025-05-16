@@ -10,6 +10,8 @@ import { Signup } from "./skill surf/signup.js";
 import { Signin } from "./skill surf/signin.js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SearchResults } from "./skill surf/search.js";
+import { UserProfile } from "./skill surf/userprofile.js";
+import { Orders } from "./skill surf/orders.js";
 export const AppContext = createContext();
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/signin" element={<Signin />} />
               <Route path="/search" element={<SearchResults />} />
+              <Route path="/user/:userId" element={<UserProfile />} />
+              <Route path="/orders" element={<Orders />} />
             </Routes>
           </QueryClientProvider>
         </div>
@@ -34,15 +38,5 @@ function App() {
     </AppContext.Provider>
   );
 }
-
-const Job = (props) => {
-  return (
-    <div>
-      <h1>{props.salary}</h1>
-      <h1>{props.position}</h1>
-      <h1>{props.company}</h1>
-    </div>
-  );
-};
 
 export default App;
