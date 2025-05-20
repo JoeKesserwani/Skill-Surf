@@ -71,7 +71,7 @@ export const UserProfile = () => {
           className="pfp"
           alt="Profile"
         />
-        <h1>{userInfo.userName || "Unnamed User"}</h1>
+        <h1>{userInfo.name || "Unnamed User"}</h1>
         <p className="description">{userInfo.description}</p>
       </div>
       <div className="profile-extras">

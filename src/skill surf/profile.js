@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import HamburgerMenu from "../components/hamburgermenu";
 import { auth, db } from "../config/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, updateProfile } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -204,7 +204,7 @@ export const Profile = (props) => {
             setLinkedIn(data.linkedIn || "");
             setResume(data.resumeURL || "");
             setMedia(data.mediaURLs || []);
-            setUserPhotoURL(data.userPhotoURL);
+            setUserPhotoURL(data.photoURL);
             setUserName(data.userName);
           }
         } catch (error) {
@@ -335,17 +335,54 @@ export const Profile = (props) => {
       ) : (
         <div>
           <div className="profilebox">
-            <div>
+            <div className="pfp-container">
               <img
                 src={
                   user?.photoURL ||
                   "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                 }
                 className="pfp"
-              ></img>
+                alt="Profile"
+              />
+              <label className="change-pfp-btn">
+                Change
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
 
+                    try {
+                      const imageRef = ref(
+                        storage,
+                        `profilePictures/${auth.currentUser.uid}_${file.name}`
+                      );
+                      await uploadBytes(imageRef, file);
+                      const downloadURL = await getDownloadURL(imageRef);
+
+                      await setDoc(
+                        doc(db, "users", auth.currentUser.uid),
+                        { photoURL: downloadURL },
+                        { merge: true }
+                      );
+                      await updateProfile(auth.currentUser, {
+                        photoURL: downloadURL,
+                      });
+
+                      setPhotoURL(downloadURL);
+                      alert("Profile picture updated!");
+                    } catch (err) {
+                      console.error("Failed to update profile picture:", err);
+                      alert("Error uploading profile picture.");
+                    }
+                  }}
+                />
+              </label>
               <h1>{auth.currentUser?.displayName}</h1>
             </div>
+
             <div className="description">
               <textarea
                 value={description}

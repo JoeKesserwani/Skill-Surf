@@ -300,6 +300,17 @@ export const SkillSurf = () => {
           </div>
         </div>
       )}
+      <footer className="footer">
+        <div className="footer-content">
+          <p>
+            &copy; {new Date().getFullYear()} SkillSurf. All rights reserved.
+          </p>
+          <p>
+            <Link to="/about">About</Link> | <Link to="/terms">Terms</Link> |{" "}
+            <Link to="/privacy">Privacy</Link>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };

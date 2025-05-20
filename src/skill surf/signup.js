@@ -123,7 +123,7 @@ export const Signup = () => {
 
       <div className="container">
         <div className="signupbox">
-          <h1>LogIn</h1>
+          <h1>SignUp</h1>
           <form
             onSubmit={handleSubmit(onEmailSignup)}
             className="email-signup-form"
