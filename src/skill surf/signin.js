@@ -62,7 +62,7 @@ export const Signin = () => {
   return (
     <div className="signin">
       <div className="header1">
-        <Link to="/skillsurf" id="logo">
+        <Link to="/" id="logo">
           <h1 id="logo">
             Skill<span style={{ color: "seagreen" }}>Surf</span>
           </h1>

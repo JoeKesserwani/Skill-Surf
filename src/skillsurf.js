@@ -233,7 +233,7 @@ export const SkillSurf = () => {
                     ? service.userPhotoURL
                     : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                 }
-                alt="Owner"
+                alt="photo"
                 className="owner-photo"
               />
             </Link>

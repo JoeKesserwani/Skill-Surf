@@ -22,6 +22,7 @@ const HamburgerMenu = () => {
           <Link to="/">Home</Link>
           <Link to="/profile">Profile</Link>
           <Link to="/orders">Notifications</Link>
+          <Link to="/admin">Admin</Link>
         </div>
       </div>
     </>
