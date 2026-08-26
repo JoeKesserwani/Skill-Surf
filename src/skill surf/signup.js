@@ -88,7 +88,7 @@ export const Signup = () => {
 
       if (!userDocSnap.exists()) {
         await setDoc(userDocRef, {
-          name: user.userName,
+          name: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
           description: "Hello! I'm new to SkillSurf.",

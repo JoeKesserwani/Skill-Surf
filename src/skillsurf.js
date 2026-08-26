@@ -1,12 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Link,
-  useNavigate,
-} from "react-router-dom";
-import { Signup } from "./skill surf/signup";
-import { Signin } from "./skill surf/signin";
+import { Link, useNavigate } from "react-router-dom";
 import HamburgerMenu from "./components/hamburgermenu";
 import { auth } from "./config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -22,8 +14,6 @@ import {
   doc,
   setDoc,
 } from "firebase/firestore";
-import { navigate } from "react-router-dom";
-import { SearchResults } from "./skill surf/search";
 
 export const SkillSurf = () => {
   const [photoURL, setPhotoURL] = useState(null);
@@ -138,15 +128,6 @@ export const SkillSurf = () => {
 
   return (
     <div className="skillsurf">
-      <head>
-        <title>SkillSurf</title>
-      </head>
-      <Routes>
-        <Route path="/signup" element={<Signup />}></Route>
-
-        <Route path="/signin" element={<Signin></Signin>} />
-      </Routes>
-
       <div className="navbar">
         <div className="ham">
           <HamburgerMenu />

@@ -1,7 +1,6 @@
 import "./App.css";
-import { useEffect, useState, createContext } from "react";
-import Axios from "axios";
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { createContext } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Profile } from "./skill surf/profile.js";
 import { SkillSurf } from "./skillsurf.js";
 import { Signup } from "./skill surf/signup.js";
@@ -12,15 +11,14 @@ import { UserProfile } from "./skill surf/userprofile.js";
 import { Orders } from "./skill surf/orders.js";
 import { Admin } from "./skill surf/admin.js";
 export const AppContext = createContext();
+const queryClient = new QueryClient();
 
 function App() {
-  const client = new QueryClient();
-
   return (
     <AppContext.Provider value={{}}>
       <Router>
         <div className="App">
-          <QueryClientProvider client={client}>
+          <QueryClientProvider client={queryClient}>
             <Routes>
               <Route path="/" element={<SkillSurf></SkillSurf>} />
               <Route path="/profile" element={<Profile />} />
