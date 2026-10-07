@@ -12,17 +12,28 @@ const HamburgerMenu = () => {
       {isOpen && <div className="overlay" onClick={closeMenu}></div>}
 
       <div className="hamburger-container">
-        <div className="hamburger" onClick={toggleMenu}>
+        <button
+          type="button"
+          className="hamburger"
+          onClick={toggleMenu}
+          aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={isOpen}
+          aria-controls="site-navigation"
+        >
           <div className="bar"></div>
           <div className="bar"></div>
           <div className="bar"></div>
-        </div>
+        </button>
 
-        <div className={`sidebar ${isOpen ? "open" : ""}`}>
-          <Link to="/">Home</Link>
-          <Link to="/profile">Profile</Link>
-          <Link to="/orders">Notifications</Link>
-          <Link to="/admin">Admin</Link>
+        <div
+          id="site-navigation"
+          className={`sidebar ${isOpen ? "open" : ""}`}
+          aria-hidden={!isOpen}
+        >
+          <Link to="/" onClick={closeMenu}>Home</Link>
+          <Link to="/profile" onClick={closeMenu}>Profile</Link>
+          <Link to="/orders" onClick={closeMenu}>Notifications</Link>
+          <Link to="/admin" onClick={closeMenu}>Admin</Link>
         </div>
       </div>
     </>

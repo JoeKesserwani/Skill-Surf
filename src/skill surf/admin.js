@@ -9,8 +9,9 @@ import {
 } from "firebase/firestore";
 import { auth } from "../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getDoc } from "firebase/firestore";
+import HamburgerMenu from "../components/hamburgermenu";
 
 export const Admin = () => {
   const [services, setServices] = useState([]);
@@ -72,7 +73,7 @@ export const Admin = () => {
     });
 
     return () => unsub();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -95,55 +96,69 @@ export const Admin = () => {
   if (!isAdmin) return <p>Access denied</p>;
 
   return (
-    <div className="admin-page">
-      <h1>Admin Dashboard</h1>
-
-      <div className="webservices">
-        {services.map((service) => (
-          <div key={service.id} className="service-card">
-            <img src={service.imageURL} alt={service.title} width="100" />
-            <div>
-              <h3>{service.title}</h3>
-              <p>{service.Sdescription}</p>
-              <p>
-                <strong>User:</strong> {service.userName}
-              </p>
-              <button onClick={() => handleDelete(service.id)}>Delete</button>
-            </div>
-          </div>
-        ))}
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Ban</th>
-              <th>Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.name || "No name"}</td>
-                <td>{user.email}</td>
-                <td>
-                  <button className="ban-btn" onClick={() => banUser(user.id)}>
-                    Ban
-                  </button>
-                </td>
-                <td>
-                  <button
-                    className="delete-btn"
-                    onClick={() => deleteUser(user.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="admin-shell">
+      <div className="navbar">
+        <div className="ham">
+          <HamburgerMenu />
+        </div>
+        <Link to="/" id="logo">
+          <h1 id="logo">
+            Skill<span style={{ color: "seagreen" }}>Surf</span>
+          </h1>
+        </Link>
       </div>
+      <main className="admin-page">
+        <h1>Admin Dashboard</h1>
+        <div className="webservices">
+          {services.map((service) => (
+            <div key={service.id} className="service-card">
+              <img src={service.imageURL} alt={service.title} width="100" />
+              <div>
+                <h3>{service.title}</h3>
+                <p>{service.Sdescription}</p>
+                <p>
+                  <strong>User:</strong> {service.userName}
+                </p>
+                <button onClick={() => handleDelete(service.id)}>Delete</button>
+              </div>
+            </div>
+          ))}
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Ban</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.name || "No name"}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <button
+                      className="ban-btn"
+                      onClick={() => banUser(user.id)}
+                    >
+                      Ban
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      className="delete-btn"
+                      onClick={() => deleteUser(user.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { db, auth } from "../config/firebase";
+import { db } from "../config/firebase";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import HamburgerMenu from "../components/hamburgermenu";
 
@@ -11,13 +11,14 @@ export const UserProfile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isActive = true;
     const fetchUserInfo = async () => {
       try {
         const docRef = doc(db, "users", userId);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
+        if (isActive && docSnap.exists()) {
           setUserInfo(docSnap.data());
-        } else {
+        } else if (isActive) {
           console.log("User not found");
         }
       } catch (error) {
@@ -31,15 +32,19 @@ export const UserProfile = () => {
         const userServices = servicesSnapshot.docs
           .map((doc) => ({ id: doc.id, ...doc.data() }))
           .filter((service) => service.userId === userId);
-        setServices(userServices);
+        if (isActive) setServices(userServices);
       } catch (error) {
         console.error("Error fetching services:", error);
       }
     };
 
-    fetchUserInfo();
-    fetchUserServices();
-    setLoading(false);
+    Promise.all([fetchUserInfo(), fetchUserServices()]).finally(() => {
+      if (isActive) setLoading(false);
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, [userId]);
 
   if (loading) return <p>Loading...</p>;

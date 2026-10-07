@@ -9,7 +9,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import {
   addDoc,
   serverTimestamp,
-  updateDoc,
   doc,
   setDoc,
 } from "firebase/firestore";
@@ -20,15 +19,16 @@ export const SearchResults = () => {
   const query = useQuery().get("query") || "";
   const [results, setResults] = useState([]);
   const [user, setUser] = useState(null);
-  const [photoURL, setPhotoURL] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesError, setServicesError] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [buyerMessage, setBuyerMessage] = useState("");
 
   const handleBuy = async () => {
     if (!user || !selectedService) return;
 
-    if (buyerMessage.length < 30) return;
+    if (buyerMessage.trim().length < 30) return;
 
     try {
       const orderRef = await addDoc(collection(db, "orders"), {
@@ -67,43 +67,39 @@ export const SearchResults = () => {
     }
   };
   useEffect(() => {
+    let isActive = true;
     const fetchMatchingServices = async () => {
-      const allServicesSnapshot = await getDocs(collection(db, "services"));
-      const allServices = allServicesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      setServicesLoading(true);
+      setServicesError(false);
+      try {
+        const allServicesSnapshot = await getDocs(collection(db, "services"));
+        const allServices = allServicesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
-      const matched = allServices.filter((service) =>
-        service.title.toLowerCase().includes(query.toLowerCase())
-      );
+        const matched = allServices.filter((service) =>
+          service.title?.toLowerCase().includes(query.toLowerCase())
+        );
 
-      setResults(matched);
+        if (isActive) setResults(matched);
+      } catch (error) {
+        console.error("Error fetching matching services:", error);
+        if (isActive) setServicesError(true);
+      } finally {
+        if (isActive) setServicesLoading(false);
+      }
     };
 
     fetchMatchingServices();
+    return () => {
+      isActive = false;
+    };
   }, [query]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setPhotoURL(user.photoURL);
-      } else {
-        setPhotoURL(null);
-      }
-
+      setUser(user || null);
       setLoading(false);
     });
 
@@ -131,6 +127,7 @@ export const SearchResults = () => {
                 ? user.photoURL
                 : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
             }
+            alt="Your profile"
             className="profile-image"
           />
         </Link>
@@ -138,7 +135,11 @@ export const SearchResults = () => {
 
       <div>
         <h2>Search Results for "{query}"</h2>
-        {results.length === 0 ? (
+        {servicesLoading ? (
+          <p role="status">Searching services...</p>
+        ) : servicesError ? (
+          <p role="alert">Could not load services. Please try again later.</p>
+        ) : results.length === 0 ? (
           <p>No matching services found.</p>
         ) : (
           <div className="services">

@@ -10,13 +10,11 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
-  updateDoc,
   doc,
   setDoc,
 } from "firebase/firestore";
 
 export const SkillSurf = () => {
-  const [photoURL, setPhotoURL] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [services, setServices] = useState([]);
@@ -29,7 +27,7 @@ export const SkillSurf = () => {
   const handleBuy = async () => {
     if (!user || !selectedService) return;
 
-    if (buyerMessage.length < 30) return;
+    if (buyerMessage.trim().length < 30) return;
 
     try {
       const orderRef = await addDoc(collection(db, "orders"), {
@@ -100,24 +98,7 @@ export const SkillSurf = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setPhotoURL(user.photoURL);
-      } else {
-        setPhotoURL(null);
-      }
-
+      setUser(user || null);
       setLoading(false);
     });
 
@@ -174,6 +155,7 @@ export const SkillSurf = () => {
                 ? user.photoURL
                 : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
             }
+            alt="Your profile"
             className="profile-image"
           />
         </Link>
@@ -214,7 +196,11 @@ export const SkillSurf = () => {
                     ? service.userPhotoURL
                     : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                 }
-                alt="photo"
+                alt={
+                  service.userName
+                    ? `${service.userName}'s profile`
+                    : "Service provider"
+                }
                 className="owner-photo"
               />
             </Link>

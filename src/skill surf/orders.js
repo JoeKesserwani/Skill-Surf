@@ -48,10 +48,6 @@ export const Orders = () => {
 
   if (loading) return <p>Loading orders...</p>;
 
-  if (!buyerOrders.length && !sellerOrders.length) {
-    return <p>No orders found.</p>;
-  }
-
   return (
     <div className="orders-page">
       <head>
@@ -118,6 +114,18 @@ export const Orders = () => {
             </div>
           ))}
         </>
+      )}
+
+      {!buyerOrders.length && !sellerOrders.length && (
+        <p className="orders-empty">
+          {userId ? (
+            "You don't have any orders yet."
+          ) : (
+            <>
+              <Link to="/signin">Sign in</Link> to view your orders.
+            </>
+          )}
+        </p>
       )}
 
       {activeChatOrderId && (

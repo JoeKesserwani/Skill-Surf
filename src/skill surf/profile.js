@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../config/firebase";
-import { deleteObject, getStorage } from "firebase/storage";
+import { deleteObject } from "firebase/storage";
 
 export const Profile = (props) => {
   const [photoURL, setPhotoURL] = useState(null);
@@ -31,14 +31,11 @@ export const Profile = (props) => {
   const [linkedIn, setLinkedIn] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
   const [mediaFiles, setMediaFiles] = useState([]);
-  const [services, setServices] = useState([]);
   const [userServices, setUserServices] = useState([]);
   const [resumeURL, setResume] = useState("");
   const [mediaURLs, setMedia] = useState([]);
   const [mediaPreviewURLs, setMediaPreviewURLs] = useState([]);
   const [serviceImageFile, setServiceImageFile] = useState(null);
-  const [userPhotoURL, setUserPhotoURL] = useState(null);
-  const [userName, setUserName] = useState("");
 
   const navigate = useNavigate();
   const handleDeleteService = async (service) => {
@@ -72,10 +69,15 @@ export const Profile = (props) => {
       return;
 
     try {
-      const fileRef = ref(storage, mediaObj.path);
-      await deleteObject(fileRef);
+      if (typeof mediaObj === "object" && mediaObj.path) {
+        await deleteObject(ref(storage, mediaObj.path));
+      }
 
-      const updatedMedia = mediaURLs.filter((m) => m.url !== mediaObj.url);
+      const mediaURL =
+        typeof mediaObj === "string" ? mediaObj : mediaObj.url;
+      const updatedMedia = mediaURLs.filter((media) =>
+        typeof media === "string" ? media !== mediaURL : media.url !== mediaURL
+      );
       await setDoc(
         doc(db, "users", auth.currentUser.uid),
         { mediaURLs: updatedMedia },
@@ -104,7 +106,7 @@ export const Profile = (props) => {
         imageURL = await getDownloadURL(snapshot.ref);
       }
 
-      await addDoc(collection(db, "services"), {
+      const service = {
         title,
         Sdescription,
         price,
@@ -113,7 +115,12 @@ export const Profile = (props) => {
         userId: user.uid,
         userPhotoURL: user.photoURL,
         userName: user.displayName,
-      });
+      };
+      const serviceRef = await addDoc(collection(db, "services"), service);
+      setUserServices((previousServices) => [
+        ...previousServices,
+        { id: serviceRef.id, ...service },
+      ]);
 
       alert("Service added!");
       setShowModal(false);
@@ -121,10 +128,9 @@ export const Profile = (props) => {
       setSDescription("");
       setPrice("");
       setServiceImageFile(null);
-      setUserPhotoURL(null);
-      setUserName("");
     } catch (error) {
       console.error("Error adding service:", error);
+      alert("Failed to add service. Please try again.");
     }
   };
 
@@ -184,6 +190,10 @@ export const Profile = (props) => {
 
       setResume(resumeDownloadURL);
       setMedia(combinedMedia);
+      mediaPreviewURLs.forEach((previewURL) => URL.revokeObjectURL(previewURL));
+      setMediaFiles([]);
+      setMediaPreviewURLs([]);
+      setResumeFile(null);
       alert("Profile extras saved!");
     } catch (error) {
       console.error("Error uploading files:", error);
@@ -204,8 +214,6 @@ export const Profile = (props) => {
             setLinkedIn(data.linkedIn || "");
             setResume(data.resumeURL || "");
             setMedia(data.mediaURLs || []);
-            setUserPhotoURL(data.photoURL);
-            setUserName(data.userName);
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
@@ -261,8 +269,6 @@ export const Profile = (props) => {
           id: doc.id,
           ...doc.data(),
         }));
-
-        setServices(servicesList);
 
         const ownedServices = servicesList.filter(
           (service) => service.userId === user.uid
@@ -338,6 +344,7 @@ export const Profile = (props) => {
             <div className="pfp-container">
               <img
                 src={
+                  photoURL ||
                   user?.photoURL ||
                   "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                 }

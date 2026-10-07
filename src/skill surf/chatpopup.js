@@ -3,8 +3,6 @@ import { auth, db } from "../config/firebase";
 import {
   collection,
   query,
-  where,
-  getDocs,
   addDoc,
   orderBy,
   onSnapshot,
@@ -21,25 +19,34 @@ export const ChatPopup = ({ orderId, onClose }) => {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid);
-        const messagesRef = collection(db, "chats", orderId, "messages");
-        const q = query(messagesRef, orderBy("timestamp"));
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          const msgs = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setMessages(msgs);
-        });
-
-        return () => unsubscribe();
-      }
+      setUserId(user?.uid || null);
     });
 
     return () => unsub();
-  }, [orderId]);
+  }, []);
+
+  useEffect(() => {
+    if (!userId) {
+      setMessages([]);
+      return undefined;
+    }
+
+    const messagesRef = collection(db, "chats", orderId, "messages");
+    const q = query(messagesRef, orderBy("timestamp"));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const msgs = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setMessages(msgs);
+      },
+      (error) => {
+        console.error("Error loading chat messages:", error);
+      }
+    );
+  }, [orderId, userId]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim().length === 0) return;
